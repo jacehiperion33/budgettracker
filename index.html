@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Budget Tracker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        
+        .budget-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid;
+        }
+        
+        .income-section {
+            border-left-color: #27ae60;
+        }
+        
+        .expenses-section {
+            border-left-color: #e74c3c;
+        }
+        
+        .debt-section {
+            border-left-color: #f39c12;
+        }
+        
+        .summary-section {
+            border-left-color: #3498db;
+            grid-column: 1 / -1;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .icon {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+        
+        .budget-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+        }
+        
+        .budget-table th,
+        .budget-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        .budget-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+            border-radius: 8px 8px 0 0;
+        }
+        
+        .budget-table input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .budget-table input:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        .total-row {
+            background: #f8f9fa;
+            font-weight: 600;
+            border-top: 2px solid #3498db;
+        }
+        
+        .total-value {
+            color: #2c3e50;
+            font-size: 1.1em;
+            font-weight: 700;
+        }
+        
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .summary-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease;
+        }
+        
+        .summary-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .summary-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .summary-card .amount {
+            font-size: 2em;
+            font-weight: 700;
+            margin: 0;
+        }
+        
+        .positive {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
+        }
+        
+        .negative {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+        }
+        
+        .instructions {
+            background: #e8f4fd;
+            border: 1px solid #bee5eb;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .instructions h3 {
+            color: #0c5460;
+            margin-top: 0;
+        }
+        
+        .instructions ul {
+            color: #0c5460;
+            margin: 0;
+        }
+        
+        .save-instructions {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .save-instructions h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+        
+        .save-instructions p {
+            color: #856404;
+            margin: 5px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .budget-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Personal Budget Tracker</h1>
+        
+        <div class="save-instructions">
+            <h3>💾 How to Save This as Your Private Budget App</h3>
+            <p><strong>Step 1:</strong> Right-click anywhere on this page</p>
+            <p><strong>Step 2:</strong> Select "Save As" or "Save Page As"</p>
+            <p><strong>Step 3:</strong> Save it as "my-budget.html" (or any name you prefer)</p>
+            <p><strong>Step 4:</strong> Double-click the saved file anytime to open your budget tracker</p>
+            <p><strong>Privacy:</strong> This will be completely private on your computer - no internet required!</p>
+        </div>
+        
+        <div class="instructions">
+            <h3>How to Use Your Budget Tracker</h3>
+            <ul>
+                <li>Enter your monthly amounts in each field</li>
+                <li>Totals will calculate automatically as you type</li>
+                <li>Use the summary section to track your overall financial health</li>
+                <li>Your data stays only on your computer - completely private</li>
+            </ul>
+        </div>
+        
+        <div class="budget-grid">
+            <div class="section income-section">
+                <h2>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    Monthly Income
+                </h2>
+                <table class="budget-table">
+                    <thead>
+                        <tr>
+                            <th>Income Source</th>
+                            <th>Amount ($)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Primary Job (Net)</td>
+                            <td><input type="number" id="income1" step="0.01" placeholder="0.00" oninput="calculateTotals()"></td>
+                        </tr>
+                        <tr>
+                            <td>Secondary Job/Freelance</td>
+                            <td><input type="number" id="income2" step="0.01" placeholder="0.00" oninput="calculateTotals()"></td>
+                        </tr>
+                        <tr>
+                            <td>Investment Income</td>
+                            <td><input type="number" id="income3" step="0.01" placeholder="0.00" oninput="calculateTotals()"></td>
+                        </tr>
+                        <tr>
+                            <td>Other Income</td>
+                            <td><input type="number" id="income4" step="0.01" placeholder="0.00" oninput="calculateTotals()"></td>
+                        </tr>
+                        <tr class="total-row">
+                            <td><strong>Total Income</strong></td>
+                            <td class="total-value" id="totalIncome">$0.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="section debt-section">
+                <h2>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                    Debt Payments
+                </h2>
+                <table class="budget-table">
+                    <thead>
+                        <tr>
+                            <th>Debt Type</th>
+                            <th>Monthly Payment ($)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Mortgage/Rent</td>
+                            <td><input type="number" id="debt1" step="0.01" placeholder="0.00" oninput="calculateTotals()"></td>
+                        </tr>
+                        <tr>
+                            <td>Car Payment</td>
+                            <td><input type="number" id="debt2" step="0.01" placeholder="0.00" oninput="calculateTotals()"></td>
+                        </tr>
+                        <tr>
+                            <td>Credit Card 1</td>
+                            <td><input type="number" id="debt3" step="0.01" placeholder="0.00" oninput="calculateTotals()"></td>
+                        </tr>
+                        <tr>
+                            <td>Credit Card 2</td>
+                            <td><input type="number" id="debt4" step="0.01" placeholder="0.00" oninput="calculateTotals()"></td>
+                        </tr>
+                        <tr>
+                            <td>Student Loans</td>
+                            <td><input type="number" id="debt5" step="0.01" placeholder="0.00" oninput="calculateTotals()"></td>
+                        </tr>
+                        <tr>
+                            <td>Personal Loan</td>
+                            <td><input type="number" id="debt6" step="0.01" placeholder="0.00" oninput="calculateTotals()"></td>
+                        </tr>
+                        <tr>
+                            <td>Other Debt</td>
+                            <td><input type="number" id="debt7" step="0.01" placeholder="0.00" oninput="calculateTotals()"></td>
+                        </tr>
+                        <tr class="total-row">
+                            <td><strong>Total Debt Payments</strong></td>
+                            <td class="total-value" id="totalDebt">$0.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="section expenses-section">
+                <h2>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/>
+                    </svg>
+                    Living Expenses
+                </h2>
+                <table class="budget-table">
+                    <thead>
+                        <tr>
+                            <th>Expense Category</th>
+                            <th>Amount ($)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Utilities (Electric, Gas, Water)</td>
+                            <td><input type="number" id="exp1" step="0.01" placeholder="0.00" oninput="calculateTotals()"></td>
+                        </tr>
+                        <tr>
+                            <td>Internet/Phone</td>
+                            <td><input type="number" id="exp2" step="0.01" placeholder="0.00" oninput="calculateTotals()"></td>
+                        </tr>
+                        <tr>
+                            <td>Insurance (Health, Auto, etc.)</td>
+                            <td><input type="number" id="exp3" step="0.01" placeholder="0.00" oninput="calculateTotals()"></td>
+                        </tr>
+                        <tr>
+                            <td>Groceries</td>
+                            <td><input type="number" id="exp4" step="0.01" placeholder="0.00" oninput="calculateTotals()"></td>
+                        </tr>
+                        <tr>
+                            <td>Gas/Transportation</td>
+                            <td><input type="number" id="exp5" step="0.01" placeholder="0.00" oninput="calculateTotals()"></td>
+                        </tr>
+                        <tr>
+                            <td>Dining Out</td>
+                            <td><input type="number" id="exp6" step="0.01" placeholder="0.00" oninput="calculateTotals()"></td>
+                        </tr>
+                        <tr>
+                            <td>Entertainment/Subscriptions</td>
+                            <td><input type="number" id="exp7" step="0.01" placeholder="0.00" oninput="calculateTotals()"></td>
+                        </tr>
+                        <tr>
+                            <td>Personal Care</td>
+                            <td><input type="number" id="exp8" step="0.01" placeholder="0.00" oninput="calculateTotals()"></td>
+                        </tr>
+                        <tr>
+                            <td>Miscellaneous</td>
+                            <td><input type="number" id="exp9" step="0.01" placeholder="0.00" oninput="calculateTotals()"></td>
+                        </tr>
+                        <tr class="total-row">
+                            <td><strong>Total Living Expenses</strong></td>
+                            <td class="total-value" id="totalExpenses">$0.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="section income-section">
+                <h2>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M14 6V4h-4v2h4zM4 8v11h16V8H4zm16-2c1.11 0 2 .89 2 2v11c0 1.11-.89 2-2 2H4c-1.11 0-2-.89-2-2l.01-11c0-1.11.88-2 1.99-2h4V4c0-1.11.89-2 2-2h4c1.11 0 2 .89 2 2v2h4z"/>
+                    </svg>
+                    Savings & Goals
+                </h2>
+                <table class="budget-table">
+                    <thead>
+                        <tr>
+                            <th>Savings Category</th>
+                            <th>Amount ($)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Emergency Fund</td>
+                            <td><input type="number" id="save1" step="0.01" placeholder="0.00" oninput="calculateTotals()"></td>
+                        </tr>
+                        <tr>
+                            <td>Retirement (401k, IRA)</td>
+                            <td><input type="number" id="save2" step="0.01" placeholder="0.00" oninput="calculateTotals()"></td>
+                        </tr>
+                        <tr>
+                            <td>Vacation Fund</td>
+                            <td><input type="number" id="save3" step="0.01" placeholder="0.00" oninput="calculateTotals()"></td>
+                        </tr>
+                        <tr>
+                            <td>Other Savings Goals</td>
+                            <td><input type="number" id="save4" step="0.01" placeholder="0.00" oninput="calculateTotals()"></td>
+                        </tr>
+                        <tr class="total-row">
+                            <td><strong>Total Savings</strong></td>
+                            <td class="total-value" id="totalSavings">$0.00</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="section summary-section">
+                <h2>
+                    <svg class="icon" viewBox="0 0 24 24">
+                        <path d="M9 11H7v6h2v-6zm4 0h-2v6h2v-6zm4 0h-2v6h2v-6zm2.5-9H19v2h-1.5v16.5c0 1.38-1.12 2.5-2.5 2.5h-11C2.62 22 1.5 20.88 1.5 19.5V4H0V2h4.5C4.5.62 5.62-.5 7-.5h4c1.38 0 2.5 1.12 2.5 2.5H18v2h-1.5v16.5z"/>
+                    </svg>
+                    Budget Summary
+                </h2>
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <h3>Total Monthly Income</h3>
+                        <p class="amount" id="summaryIncome">$0.00</p>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Total Monthly Expenses</h3>
+                        <p class="amount" id="summaryExpenses">$0.00</p>
+                    </div>
+                    <div class="summary-card" id="netIncomeCard">
+                        <h3>Net Monthly Income</h3>
+                        <p class="amount" id="netIncome">$0.00</p>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Expense to Income Ratio</h3>
+                        <p class="amount" id="expenseRatio">0%</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function calculateTotals() {
+            // Calculate total income
+            const incomes = ['income1', 'income2', 'income3', 'income4'];
+            let totalIncome = 0;
+            incomes.forEach(id => {
+                const value = parseFloat(document.getElementById(id).value) || 0;
+                totalIncome += value;
+            });
+            
+            // Calculate total debt payments
+            const debts = ['debt1', 'debt2', 'debt3', 'debt4', 'debt5', 'debt6', 'debt7'];
+            let totalDebt = 0;
+            debts.forEach(id => {
+                const value = parseFloat(document.getElementById(id).value) || 0;
+                totalDebt += value;
+            });
+            
+            // Calculate total living expenses
+            const expenses = ['exp1', 'exp2', 'exp3', 'exp4', 'exp5', 'exp6', 'exp7', 'exp8', 'exp9'];
+            let totalExpenses = 0;
+            expenses.forEach(id => {
+                const value = parseFloat(document.getElementById(id).value) || 0;
+                totalExpenses += value;
+            });
+            
+            // Calculate total savings
+            const savings = ['save1', 'save2', 'save3', 'save4'];
+            let totalSavings = 0;
+            savings.forEach(id => {
+                const value = parseFloat(document.getElementById(id).value) || 0;
+                totalSavings += value;
+            });
+            
+            // Update display values
+            document.getElementById('totalIncome').textContent = formatCurrency(totalIncome);
+            document.getElementById('totalDebt').textContent = formatCurrency(totalDebt);
+            document.getElementById('totalExpenses').textContent = formatCurrency(totalExpenses);
+            document.getElementById('totalSavings').textContent = formatCurrency(totalSavings);
+            
+            // Calculate summary values
+            const totalMonthlyExpenses = totalDebt + totalExpenses + totalSavings;
+            const netIncome = totalIncome - totalMonthlyExpenses;
+            const expenseRatio = totalIncome > 0 ? (totalMonthlyExpenses / totalIncome * 100) : 0;
+            
+            // Update summary display
+            document.getElementById('summaryIncome').textContent = formatCurrency(totalIncome);
+            document.getElementById('summaryExpenses').textContent = formatCurrency(totalMonthlyExpenses);
+            document.getElementById('netIncome').textContent = formatCurrency(netIncome);
+            document.getElementById('expenseRatio').textContent = expenseRatio.toFixed(1) + '%';
+            
+            // Update net income card color
+            const netIncomeCard = document.getElementById('netIncomeCard');
+            if (netIncome >= 0) {
+                netIncomeCard.className = 'summary-card positive';
+            } else {
+                netIncomeCard.className = 'summary-card negative';
+            }
+        }
+        
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD'
+            }).format(amount);
+        }
+        
+        // Initialize calculations
+        calculateTotals();
+    </script>
+</body>
+</html>
